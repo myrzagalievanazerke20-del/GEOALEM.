@@ -1,0 +1,1042 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="kk" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoAlam — Интерактивті География Платформасы</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 4px;
+        }
+
+        /* Interactive Map Styling */
+        #kz-map {
+            --g1: #a9d8a4;
+            --g2: #e6eaa6;
+            --g3: #f4d9a0;
+            --halo: #fff;
+        }
+        .dark #kz-map {
+            --g1: #14532d;
+            --g2: #4a5a22;
+            --g3: #6b4f1d;
+            --halo: #0f172a;
+        }
+        #kz-map .bg-land { fill: #e9e7dc; }
+        .dark #kz-map .bg-land { fill: #1e293b; }
+        #kz-map .gl { stroke: #b9d2e6; stroke-width: 1; }
+        .dark #kz-map .gl { stroke: #334155; }
+        #kz-map .gt { font-size: 15px; fill: #7fa3c0; }
+        .dark #kz-map .gt { fill: #64748b; }
+        #kz-map .kz { stroke: #047857; stroke-width: 3; stroke-linejoin: round; }
+        #kz-map .water { fill: #c3e8f6; stroke: #6fbad8; stroke-width: 1.5; }
+        .dark #kz-map .water { fill: #0c4a6e; stroke: #0369a1; }
+        #kz-map .nb { font-size: 21px; font-style: italic; letter-spacing: 2px; fill: #8b8f78; }
+        .dark #kz-map .nb { fill: #64748b; }
+        #kz-map .sea { font-size: 20px; font-style: italic; fill: #2f86a8; }
+        .dark #kz-map .sea { fill: #7dd3fc; }
+        #kz-map .lbl {
+            font-size: 19px;
+            font-weight: 700;
+            paint-order: stroke;
+            stroke: var(--halo);
+            stroke-width: 5;
+            stroke-linejoin: round;
+        }
+        [data-game="1"] .lbl { display: none; }
+        .dot { cursor: pointer; }
+        .dot:hover circle { fill: #f59e0b; }
+        #atlas-info button:not(.pin-btn) { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col">
+
+    <header class="sticky top-0 z-40 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-emerald-100 dark:border-slate-800 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('lessons')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                        <i class="fa-solid font-bold fa-earth-americas text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">GeoAlam</span>
+                        <span class="block text-[10px] font-medium text-emerald-600 dark:text-emerald-400 -mt-1">Интерактивті география платформасы</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="hidden md:flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    <button id="nav-lessons" onclick="switchTab('lessons')" class="px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm">
+                        <i class="fa-solid fa-book-open"></i> Сабақтар базасы
+                    </button>
+                    <button id="nav-atlas" onclick="switchTab('atlas')" class="px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600">
+                        <i class="fa-solid fa-map"></i> Интерактивті Атлас
+                    </button>
+                    <button id="nav-quiz" onclick="switchTab('quiz')" class="px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600">
+                        <i class="fa-solid fa-circle-question"></i> Викторина
+                    </button>
+                </nav>
+
+                <!-- Controls -->
+                <div class="flex items-center gap-3">
+                    <button id="theme-toggle" onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 transition">
+                        <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+                    </button>
+                    <button onclick="toggleMobileMenu()" class="md:hidden p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Nav Menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-2 pb-4 space-y-2">
+            <button onclick="switchTab('lessons'); toggleMobileMenu();" class="w-full text-left px-4 py-2.5 rounded-xl font-medium text-slate-700 dark:text-slate-200 hover:bg-emerald-50">
+                <i class="fa-solid fa-book-open mr-2 text-emerald-500"></i> Сабақтар базасы
+            </button>
+            <button onclick="switchTab('atlas'); toggleMobileMenu();" class="w-full text-left px-4 py-2.5 rounded-xl font-medium text-slate-700 dark:text-slate-200 hover:bg-emerald-50">
+                <i class="fa-solid fa-map mr-2 text-emerald-500"></i> Интерактивті Атлас
+            </button>
+            <button onclick="switchTab('quiz'); toggleMobileMenu();" class="w-full text-left px-4 py-2.5 rounded-xl font-medium text-slate-700 dark:text-slate-200 hover:bg-emerald-50">
+                <i class="fa-solid fa-circle-question mr-2 text-emerald-500"></i> Викторина
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- LESSONS TAB -->
+        <section id="tab-lessons" class="space-y-6">
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-800 via-teal-800 to-slate-900 text-white p-6 sm:p-10 shadow-xl">
+                <div class="absolute -right-10 -bottom-10 opacity-20 text-[200px] pointer-events-none">
+                    <i class="fa-solid fa-earth-asia"></i>
+                </div>
+                <div class="relative z-10 max-w-2xl space-y-4">
+                    <span class="px-3 py-1 bg-emerald-500/30 backdrop-blur-md text-emerald-300 text-xs font-bold rounded-full border border-emerald-400/30 uppercase tracking-wider">Мектеп бағдарламасы 6-9 сынып</span>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">География әлемін интерактивті зерттеңіз</h1>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                        Литосфера, гидросфера, климаттық белдеулер және Қазақстанның физикалық-экономикалық географиясы бойынша толық мәліметтер.
+                    </p>
+                    <div class="pt-2 flex flex-wrap gap-3">
+                        <button onclick="switchTab('quiz')" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg transition flex items-center gap-2">
+                            <i class="fa-solid fa-circle-question"></i> Викторинаны бастау
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between flex-wrap gap-4 pt-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                <div class="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
+                    <button onclick="filterGrade('all')" id="grade-btn-all" class="grade-filter-btn active px-4 py-2 rounded-xl text-sm font-semibold transition border border-emerald-500 bg-emerald-500 text-white shadow-sm">Барлығы</button>
+                    <button onclick="filterGrade(6)" id="grade-btn-6" class="grade-filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">6-сынып</button>
+                    <button onclick="filterGrade(7)" id="grade-btn-7" class="grade-filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">7-сынып</button>
+                    <button onclick="filterGrade(8)" id="grade-btn-8" class="grade-filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">8-сынып</button>
+                    <button onclick="filterGrade(9)" id="grade-btn-9" class="grade-filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">9-сынып</button>
+                </div>
+                <div class="relative w-full sm:w-64">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="lesson-search" oninput="renderLessons()" placeholder="Сабақты іздеу..." class="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+
+            <div id="lessons-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- ATLAS TAB (Interactive Map / Region Explorer) -->
+        <section id="tab-atlas" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-2xl font-bold">Интерактивті Қазақстан атласы</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Нүктені басыңыз немесе «Картадан тап» ойынын бастаңыз (схемалық карта)</p>
+                    </div>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <div class="bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700 flex">
+                            <button id="map-mode-kz" onclick="atlasMode('kz')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow">Қазақстан</button>
+                            <button id="map-mode-world" onclick="atlasMode('world')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-300">Дүниежүзі</button>
+                        </div>
+                        <button id="game-btn" onclick="startGame()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-sm">
+                            <i class="fa-solid fa-gamepad mr-2"></i>Картадан тап
+                        </button>
+                    </div>
+                </div>
+                <div id="game-msg" class="hidden px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold text-sm"></div>
+                <div class="grid lg:grid-cols-3 gap-5">
+                    <div class="lg:col-span-2 rounded-2xl bg-sky-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2">
+                        <svg id="kz-map" class="w-full text-slate-700 dark:text-slate-200"></svg>
+                        <div id="world-box" class="hidden relative">
+                            <div id="world-live">
+                                <svg id="world-svg" viewBox="0 0 1000 520" class="w-full rounded-xl bg-sky-100 dark:bg-sky-950 touch-none select-none cursor-grab"></svg>
+                                <div id="world-tip" class="hidden absolute pointer-events-none px-2 py-1 rounded-lg bg-slate-900 text-white text-xs font-semibold shadow"></div>
+                                <div class="absolute top-3 right-3 flex flex-col gap-1">
+                                    <button onclick="worldZ(1)" class="w-9 h-9 rounded-lg bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-600 text-lg font-bold shadow">+</button>
+                                    <button onclick="worldZ(-1)" class="w-9 h-9 rounded-lg bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-600 text-lg font-bold shadow">−</button>
+                                    <button onclick="worldZ(0)" class="w-9 h-9 rounded-lg bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-600 text-xs font-bold shadow" title="Бастапқы көрініс">⟲</button>
+                                </div>
+                                <p id="world-status" class="text-xs text-slate-400 mt-2 text-center"></p>
+                                <p class="text-xs text-slate-400 mt-1 text-center">Дөңгелекпен немесе «+ / −» батырмасымен үлкейтіп, сүйреп жылжытыңыз. Елді басып, ақпарат алыңыз.</p>
+                            </div>
+                            <div id="world-fallback" class="hidden">
+                                <img id="world-img" src="data:image/webp;base64,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" alt="Дүниежүзінің саяси картасы" class="w-full rounded-xl cursor-zoom-in" onclick="worldZoom(true)">
+                                <p class="text-xs text-amber-600 mt-2 text-center">Интернет жоқ болғандықтан, векторлық карта жүктелмеді. Үлкейту үшін суретті басыңыз.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="atlas-info" class="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5 text-sm space-y-3">
+                        <p class="text-slate-500">Картадағы қаланы немесе өңірді таңдаңыз.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- QUIZ TAB -->
+        <section id="tab-quiz" class="hidden space-y-6 max-w-3xl mx-auto">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold">Географиялық Викторина</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Біліміңізді тексеріп, ұпай жинаңыз</p>
+                    </div>
+                    <span id="quiz-score" class="px-4 py-1.5 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded-full font-extrabold text-sm">Ұпай: 0</span>
+                </div>
+                <div id="quiz-container" class="space-y-6"></div>
+                <div class="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <span id="quiz-progress" class="text-xs font-semibold text-slate-400">Сұрақ 0 / 0</span>
+                    <button onclick="nextQuestion()" id="quiz-next-btn" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-md">
+                        Келесі сұрақ <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- LESSON MODAL -->
+    <div id="lesson-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700 shadow-2xl p-6 space-y-6">
+            <div class="flex items-start justify-between border-b border-slate-200 dark:border-slate-700 pb-4">
+                <div>
+                    <span id="modal-grade" class="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-bold rounded-lg"></span>
+                    <h2 id="modal-title" class="text-2xl font-extrabold mt-2"></h2>
+                </div>
+                <button onclick="closeLessonModal()" class="p-2 text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div id="modal-content" class="text-sm leading-relaxed space-y-4 text-slate-700 dark:text-slate-300"></div>
+        </div>
+    </div>
+
+    <!-- MAIN APP & BUNDLED LOGIC -->
+    <script>
+        const LESSONS_DATA = []; /* Сабақтарды «Мұғалім панелі» арқылы өзіңіз қосасыз */
+
+        let QUIZ = [];
+        let quizIdx = 0;
+        let score = 0;
+        let currentActiveGrade = 'all';
+
+        function renderLessons() {
+            const grid = document.getElementById('lessons-grid');
+            const searchInput = document.getElementById('lesson-search');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            grid.innerHTML = '';
+            const filtered = LESSONS_DATA.filter(l => (currentActiveGrade === 'all' || l.grade === currentActiveGrade) && (l.title.toLowerCase().includes(search) || l.summary.toLowerCase().includes(search)));
+            if(!filtered.length){grid.innerHTML='<div class="col-span-full text-center py-12 text-slate-500"><div class="text-5xl mb-3">📚</div><p class="font-semibold">'+(LESSONS_DATA.length?'Сабақ табылмады':'Әзірге сабақ жоқ')+'</p>'+(LESSONS_DATA.length?'':'<p class="text-sm mt-1">«Мұғалім панелі» бөлімінде «Сабақ қосу» арқылы өз сабағыңызды қосыңыз.</p>')+'</div>';return;}
+            filtered.forEach(l => {
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-xl transition flex flex-col justify-between';
+                card.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between"><span class="px-3 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-bold">${l.grade}-сынып</span><i class="fa-solid ${l.icon} text-xl text-emerald-500"></i></div>
+                        <h3 class="text-lg font-bold">${l.title}</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">${l.summary}</p>
+                    </div>
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-700 mt-4 flex justify-end">
+                        <button onclick="openLessonModal(${l.id})" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-emerald-600 hover:text-white rounded-xl text-xs font-bold transition">Оқу</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterGrade(grade) {
+            currentActiveGrade = grade;
+            document.querySelectorAll('.grade-filter-btn').forEach(b => {
+                b.className = "grade-filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700";
+            });
+            const activeBtn = document.getElementById(`grade-btn-${grade}`);
+            if (activeBtn) {
+                activeBtn.className = "grade-filter-btn active px-4 py-2 rounded-xl text-sm font-semibold transition border border-emerald-500 bg-emerald-500 text-white shadow-sm";
+            }
+            renderLessons();
+        }
+
+        function openLessonModal(id) {
+            const l = LESSONS_DATA.find(x => x.id === id);
+            if (!l) return;
+            document.getElementById('modal-grade').innerText = `${l.grade}-сынып`;
+            document.getElementById('modal-title').innerText = l.title;
+            document.getElementById('modal-content').innerHTML = l.content;
+            document.getElementById('lesson-modal').classList.remove('hidden');
+        }
+
+        function closeLessonModal() {
+            document.getElementById('lesson-modal').classList.add('hidden');
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const icon = document.getElementById('theme-icon');
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-lg' : 'fa-solid fa-moon text-lg';
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+    </script>
+
+    <!-- INTEGRATED MODULE: ATLAS, QUIZ, PROGRESS & TEACHER PANEL -->
+    <script>
+    (function(){
+    const $=id=>document.getElementById(id);
+    const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const S=(k,d)=>{try{const v=JSON.parse(localStorage.getItem('geo_'+k));return v==null?d:v}catch(e){return d}};
+    const W=(k,v)=>{try{localStorage.setItem('geo_'+k,JSON.stringify(v))}catch(e){}};
+    let P=S('p',{read:[],best:0,map:0});
+    const IN='w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500';
+    const BTN='px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition';
+    const BTN2='px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 rounded-xl text-sm font-semibold transition';
+    const nl=t=>esc(t).replace(/\n/g,'<br>');
+    const L=(t,c)=>'<label class="block space-y-1"><span class="text-xs font-bold text-slate-500 dark:text-slate-400">'+t+'</span>'+c+'</label>';
+    const TA=(id,rows,ph)=>'<textarea id="'+id+'" rows="'+(rows||2)+'" placeholder="'+(ph||'')+'" class="'+IN+'"></textarea>';
+    const TYPES={single:'Бір дұрыс жауап',multi:'Бірнеше дұрыс жауап',tf:'Дұрыс / Бұрыс',text:'Қысқа жауап (жазу)',match:'Сәйкестендіру'};
+    const KEY='geo_custom';
+
+    /* ---- 1. Прогресс ---- */
+    function upd(){
+        let e=$('progress-bar');
+        if(!e){
+            const g=$('lessons-grid');if(!g)return;
+            e=document.createElement('div');
+            e.id='progress-bar';
+            e.className='p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm space-y-2';
+            g.parentNode.insertBefore(e,g);
+        }
+        const n=P.read.filter(id=>LESSONS_DATA.some(l=>l.id===id)).length,t=LESSONS_DATA.length;
+        e.innerHTML='<div class="flex flex-wrap justify-between gap-2 font-semibold"><span>📖 Оқылған сабақ: '+n+' / '+t+'</span><span>🏆 Викторина рекорды: '+P.best+'</span><span>🗺️ Карта ойыны: '+P.map+' / 8</span></div><div class="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden"><div class="h-2 bg-emerald-500" style="width:'+(t?n/t*100:0)+'%"></div></div>';
+    }
+    window.gmUpd=upd;
+    const oL=window.openLessonModal;
+    window.openLessonModal=function(id){
+        oL(id);
+        if(!P.read.includes(id)){P.read.push(id);W('p',P);}
+        upd();
+    };
+
+    /* ---- 2. Викторина ---- */
+    /* Викторина бос: сұрақтарды Мұғалім панелінен өзіңіз қосасыз */
+    let ans=false;
+    const norm=s=>String(s).trim().toLowerCase().replace(/ё/g,'е').replace(/\s+/g,' ');
+    const shuffle=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(p=>p[1]);
+    const CHK='<button onclick="gmCheck()" class="'+BTN+'">Жауапты тексеру</button>';
+    const OPT='flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700';
+    const QB='quiz-btn w-full text-left p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-slate-700';
+
+    window.loadQuiz=function(){
+        ans=false;if(quizIdx>=QUIZ.length)quizIdx=0;
+        const nb=$('quiz-next-btn');
+        if(!QUIZ.length){
+            $('quiz-progress').innerText='Сұрақ 0 / 0';$('quiz-score').innerText='Ұпай: 0';
+            if(nb)nb.classList.add('hidden');
+            $('quiz-container').innerHTML='<div class="text-center space-y-3 py-8"><div class="text-5xl">📝</div><h3 class="text-xl font-bold">Викторина әзірге бос</h3><p class="text-slate-500 text-sm">«Мұғалім панелі» бөлімінде «Тапсырма қосу» арқылы өз сұрақтарыңызды қосыңыз.</p><button onclick="switchTab(\'manage\');gmSub(\'quiz\')" class="'+BTN+'">Тапсырма қосу</button></div>';
+            return;
+        }
+        if(nb)nb.classList.remove('hidden');
+        const q=QUIZ[quizIdx],t=q.type||'single';let b='';
+        if(t==='single')b=q.options.map((o,i)=>'<button onclick="checkQuiz('+i+')" class="'+QB+'">'+esc(o)+'</button>').join('');
+        else if(t==='multi')b='<p class="text-xs text-slate-400">Бірнеше дұрыс жауап бар</p>'+q.opts.map((o,i)=>'<label class="'+OPT+'"><input type="checkbox" class="tq w-4 h-4" value="'+i+'"><span>'+esc(o)+'</span></label>').join('')+CHK;
+        else if(t==='tf')b='<div class="grid grid-cols-2 gap-3"><button onclick="gmCheck(true)" class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-slate-700 font-semibold">Дұрыс</button><button onclick="gmCheck(false)" class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-slate-700 font-semibold">Бұрыс</button></div>';
+        else if(t==='text')b='<input id="tq-text" class="'+IN+'" placeholder="Жауабыңызды жазыңыз..." autocomplete="off">'+CHK;
+        else{const rs=shuffle(q.pairs.map(p=>p[1]));b='<p class="text-xs text-slate-400">Әр элементке сәйкес жауапты таңдаңыз</p>'+q.pairs.map((p,i)=>'<div class="'+OPT+' justify-between"><span class="text-sm font-semibold">'+esc(p[0])+'</span><select class="tq-sel '+IN+' max-w-[55%]" data-i="'+i+'"><option value="">—</option>'+rs.map(r=>'<option value="'+esc(r)+'">'+esc(r)+'</option>').join('')+'</select></div>').join('')+CHK;}
+        $('quiz-progress').innerText='Сұрақ '+(quizIdx+1)+' / '+QUIZ.length;
+        $('quiz-score').innerText='Ұпай: '+score;
+        $('quiz-container').innerHTML='<h3 class="text-lg font-bold">'+esc(q.q)+'</h3><div class="space-y-2">'+b+'</div><div id="quiz-exp" class="text-sm text-slate-500 dark:text-slate-400"></div>';
+    };
+
+    function finish(ok,right,q){
+        ans=true;if(ok)score+=10;$('quiz-score').innerText='Ұпай: '+score;
+        document.querySelectorAll('#quiz-container input,#quiz-container select,#quiz-container .tq-sel,#quiz-container button').forEach(e=>e.disabled=true);
+        $('quiz-exp').innerHTML=(ok?'✅ Дұрыс! ':'❌ Қате. '+(right?'Дұрыс жауап: '+esc(right)+'. ':''))+esc(q.exp||'');
+    }
+
+    window.checkQuiz=function(i){
+        if(ans)return;const q=QUIZ[quizIdx];
+        document.querySelectorAll('#quiz-container .quiz-btn').forEach((b,k)=>{if(k===q.correct)b.classList.add('bg-emerald-500','text-white');else if(k===i)b.classList.add('bg-red-500','text-white');});
+        finish(i===q.correct,'',q);
+    };
+
+    window.gmCheck=function(arg){
+        if(ans)return;const q=QUIZ[quizIdx];let ok=false,right='';
+        if(q.type==='multi'){const s=[...document.querySelectorAll('.tq:checked')].map(x=>+x.value).sort((a,b)=>a-b).join();ok=s===q.answers.slice().sort((a,b)=>a-b).join();right=q.answers.map(i=>q.opts[i]).join(', ');}
+        else if(q.type==='tf'){ok=arg===q.tf;right=q.tf?'Дұрыс':'Бұрыс';}
+        else if(q.type==='text'){const v=norm($('tq-text').value);if(!v)return;ok=q.accepted.some(a=>norm(a)===v);right=q.accepted[0];}
+        else if(q.type==='match'){const ss=[...document.querySelectorAll('.tq-sel')];if(ss.some(s=>!s.value))return alert('Барлық жұпты таңдаңыз');ok=ss.every(s=>s.value===q.pairs[+s.dataset.i][1]);right=q.pairs.map(p=>p[0]+' → '+p[1]).join('; ');}
+        else return;
+        finish(ok,right,q);
+    };
+
+    window.nextQuestion=function(){
+        if(!ans||!QUIZ.length)return;
+        if(quizIdx<QUIZ.length-1){quizIdx++;loadQuiz();return;}
+        const max=QUIZ.length*10;if(score>P.best){P.best=score;W('p',P);}upd();
+        $('quiz-container').innerHTML='<div class="text-center space-y-3 py-6"><div class="text-5xl">'+(score>=max*.8?'🏆':score>=max*.5?'👍':'📚')+'</div><h3 class="text-2xl font-bold">Нәтиже: '+score+' / '+max+'</h3><p class="text-slate-500">'+(score>=max*.8?'Тамаша! Сіз географияны жақсы білесіз.':score>=max*.5?'Жақсы, бірақ қайталауға тұрарлық тақырыптар бар.':'Сабақтар бөлімін қайта оқып көріңіз.')+'</p><button onclick="quizIdx=0;score=0;loadQuiz()" class="'+BTN+'">Қайта тапсыру</button></div>';
+        ans=false;
+    };
+
+    /* ---- 3. Интерактивті Атлас ---- */
+    const BORDER="1193,300 1179,265 1165,262 1123,263 1112,247 1089,233 1066,240 1037,240 1022,226 1012,224 1006,226 998,236 993,236 967,194 966,179 948,167 931,143 911,130 895,107 865,113 830,134 808,137 804,133 803,122 792,115 772,108 748,111 744,106 744,92 732,70 710,72 700,67 678,64 643,85 581,93 563,105 529,110 510,117 457,120 453,132 459,146 475,151 476,155 472,158 460,157 451,163 448,174 452,183 434,193 431,203 437,210 467,224 468,231 461,242 444,248 426,245 418,250 392,245 381,230 368,228 355,235 341,231 329,232 309,247 300,248 277,234 263,235 234,214 216,213 207,206 199,206 187,212 167,207 128,230 119,241 105,250 104,274 96,275 81,261 69,260 54,280 51,290 54,304 45,317 44,327 58,338 64,353 87,354 100,368 101,374 93,381 91,389 94,398 107,408 113,408 122,402 136,405 147,393 175,378 186,380 199,388 221,384 229,389 229,413 222,430 215,436 193,436 181,440 161,468 161,475 170,491 170,508 190,518 197,533 213,541 214,551 219,556 249,554 261,544 280,558 292,578 308,578 312,572 313,454 320,449 370,435 404,432 411,426 414,415 424,407 426,394 434,391 456,402 442,424 442,447 449,457 448,473 477,500 490,503 517,498 567,498 581,507 591,519 595,528 596,552 614,563 621,580 649,580 673,586 701,567 718,567 736,557 740,552 740,540 745,535 761,540 799,539 804,535 809,522 823,515 858,524 909,522 958,527 980,540 991,542 1002,556 1040,556 1045,548 1040,539 1027,535 1010,537 1006,534 1014,502 1004,476 1002,453 1006,450 1020,450 1033,441 1056,443 1060,436 1056,422 1071,413 1073,401 1080,393 1082,379 1093,383 1134,383 1148,378 1155,367 1150,355 1152,340 1165,331 1182,328",CASPIAN="73,425 64,450 49,465 49,469 61,476 68,485 71,519 90,544 93,554 106,562 122,590 141,605 139,612 127,617 121,645 116,649 111,648 109,656 259,656 262,648 252,646 247,649 241,645 240,641 244,638 244,633 240,630 242,623 225,623 219,619 218,604 228,595 240,595 254,602 270,598 274,585 255,567 253,552 235,550 227,552 220,562 213,562 211,554 219,536 218,531 208,525 195,524 188,516 182,515 168,484 161,475 155,477 146,470 153,462 165,463 173,468 183,467 173,459 172,452 178,443 189,436 216,435 237,439 223,433 230,409 229,399 235,389 231,386 212,384 200,386 186,378 170,379 144,393 137,400 127,399 115,403 113,410 106,410 96,416 97,420 93,424",ARAL="442,384 438,390 430,389 424,392 426,402 413,406 415,407 415,413 413,414 412,421 407,421 407,416 402,418 398,416 390,418 386,427 414,440 421,449 435,457 439,463 448,469 451,466 449,465 450,459 446,450 447,446 443,443 442,437 445,432 441,425 449,410 455,408 460,403 462,393 452,399 448,396 450,391 447,388 447,384",BALK="808,429 815,435 818,441 821,442 822,448 828,449 827,444 831,437 828,436 827,432 832,425 828,416 833,412 837,415 839,414 847,401 853,401 860,398 874,399 900,397 910,401 918,398 936,405 947,405 953,401 962,401 966,393 951,393 941,397 926,394 916,396 908,394 891,395 883,391 868,393 853,393 849,391 837,394 831,400 826,401 821,408 816,409 813,418 808,423";
+    const fx=lo=>28.5+(lo-46)*28.35;
+    const LA=[[54,120.5],[50,271],[46,416.5],[42,555]];
+    const fy=la=>{const i=la>=50?0:la>=46?1:2,a=LA[i],b=LA[i+1];return a[1]+(a[0]-la)/(a[0]-b[0])*(b[1]-a[1]);};
+    const PL=[
+        ["Астана",71.43,51.17,"Елорда. Есіл өзені бойында, Сарыарқаның солтүстігінде, күрт континентті климат."],
+        ["Алматы",76.9,43.25,"Іле Алатауының баурайындағы ірі мегаполис. Таулы өңір, жер сілкінісі қаупі жоғары аймақ."],
+        ["Шымкент",69.6,42.3,"Оңтүстік өңірдің ірі өнеркәсіп және мәдени орталығы, жылы климат."],
+        ["Ақтөбе",57.2,50.3,"Елек өзені алабы. Хром кені және мұнай-газ өнеркәсібі дамыған."],
+        ["Атырау",51.9,47.1,"Жайық өзені Каспийге құятын аймақ. Мұнай өндірудің басты орталығы."],
+        ["Ақтау",51.2,43.65,"Каспий жағалауындағы Маңғыстау өңірі: Үстірт пен Маңғыстау түбегі, шөлді климат, мұнай мен газ."],
+        ["Орал",51.4,51.2,"Жайық өзені бойындағы қала. Еуропа мен Азия шекарасына жақын."],
+        ["Қостанай",63.6,53.2,"Қазақстанның астық өсіретін негізгі өңірлерінің бірі, дала зонасы."],
+        ["Көкшетау",69.4,53.3,"Ақмола өңірі. Бурабай мен Көкшетау қыраты — тау-орманды демалыс аймағы."],
+        ["Павлодар",76.95,52.3,"Ертіс өзені бойында. Энергетика, алюминий және химия өнеркәсібі."],
+        ["Өскемен",82.6,49.95,"Шығыс Қазақстан: Алтай тауы, түсті металдар кені, Ертіс өзенінің бастауына жақын."],
+        ["Қарағанды",73.1,49.8,"Сарыарқа ұсақ шоқылы өңірі. Қазақстанның ірі көмір бассейні мен металлургия орталығы."],
+        ["Қызылорда",65.5,44.85,"Сырдария өзені бойында. Күріш егіледі; Арал теңізінің тартылуы әсер еткен аймақ."],
+        ["Балқаш көлі",75.0,46.3,"Батыс бөлігі тұщы, шығыс бөлігі тұзды болып келетін ерекше көл."],
+        ["Хан-Тәңірі",80.2,42.2,"Қазақстанның ең биік шыңы (7010 м), Тянь-Шань тау жүйесінде."],
+        ["Петропавл",69.15,54.87,"Солтүстік Қазақстан облысының орталығы, Есіл өзені бойында. Дала зонасы, астық өсіретін өңір."],
+        ["Семей",80.23,50.42,"Ертіс өзені жағасындағы қала. Маңында бұрынғы Семей ядролық полигоны болған (1991 жылы жабылды)."],
+        ["Тараз",71.37,42.9,"Талас өзені бойындағы көне қала, Жамбыл облысының орталығы."],
+        ["Талдықорған",78.37,45.02,"Жетісу облысының орталығы, Жоңғар Алатауының етегінде."],
+        ["Жезқазған",67.71,47.79,"Ұлытау облысының орталығы, мыс өндіру орталығы, Сарыарқаның оңтүстік-батысында."],
+        ["Түркістан",68.25,43.3,"Түркістан облысының орталығы, көне Ясы қаласы. Қожа Ахмет Яссауи кесенесі ЮНЕСКО тізімінде.",1],
+        ["Байқоңыр",63.3,45.62,"Қызылорда облысындағы ғарыш айлағы, Сырдария бойында. 1957 жылы тұңғыш жер серігі осы жерден ұшырылды."]
+    ];
+    let game=null;
+
+    window.renderAtlas=function(){
+        const svg=$('kz-map');if(!svg)return;
+        svg.setAttribute('data-game',game?'1':'0');
+        svg.setAttribute('viewBox','20 50 1200 575');
+        svg.style.minWidth='620px';
+        if(svg.parentNode)svg.parentNode.style.overflowX='auto';
+        let h='<defs><linearGradient id="kzg" gradientUnits="userSpaceOnUse" x1="0" y1="70" x2="0" y2="580"><stop offset="0" style="stop-color:var(--g1)"/><stop offset=".55" style="stop-color:var(--g2)"/><stop offset="1" style="stop-color:var(--g3)"/></linearGradient></defs><rect class="bg-land" x="0" y="0" width="1250" height="700"/>';
+        for(let lo=46;lo<=86;lo+=4){const x=fx(lo);h+='<line class="gl" x1="'+x+'" y1="50" x2="'+x+'" y2="625"/><text class="gt" x="'+(x+4)+'" y="68">'+lo+'°</text>';}
+        LA.forEach(a=>{h+='<line class="gl" x1="20" y1="'+a[1]+'" x2="1220" y2="'+a[1]+'"/><text class="gt" x="26" y="'+(a[1]-5)+'">'+a[0]+'°</text>';});
+        h+='<polygon class="kz" fill="url(#kzg)" points="'+BORDER+'"/><polygon class="water" points="'+CASPIAN+'"/><polygon class="water" points="'+ARAL+'"/><polygon class="water" points="'+BALK+'"/>';
+        h+='<ellipse class="water" cx="'+fx(83.9)+'" cy="'+fy(48.0)+'" rx="30" ry="9"/><ellipse class="water" cx="'+fx(81.9)+'" cy="'+fy(46.0)+'" rx="12" ry="8"/>';
+        h+='<text class="nb" x="470" y="95">Ресей</text><text class="nb" x="1120" y="545">Қытай</text><text class="nb" x="455" y="575">Өзбекстан</text><text class="nb" x="790" y="600">Қырғызстан</text><text class="nb" x="300" y="612">Түрікменстан</text><text class="sea" x="75" y="560">Каспий теңізі</text>';
+        PL.forEach((p,i)=>{
+            const x=fx(p[1]),y=fy(p[2]),mt=p[0]==='Хан-Тәңірі',lk=p[0]==='Балқаш көлі',L=p[4];
+            h+='<g class="dot" onclick="pickPlace('+i+')"><circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(mt?10:9)+'" fill="'+(mt?'#dc2626':lk?'#0284c7':'#059669')+'" stroke="#fff" stroke-width="3"/><text class="lbl" '+(L?'text-anchor="end" x="'+(x-14).toFixed(1):'x="'+(x+14).toFixed(1))+'" y="'+(y+6).toFixed(1)+'" fill="currentColor">'+p[0]+'</text></g>';
+        });
+        svg.innerHTML=h;
+    };
+
+    window.pickPlace=function(i){
+        const m=$('game-msg');
+        if(game){
+            const t=game.q[game.i];
+            if(i==t){game.s++;m.textContent='✅ Дұрыс!';}else m.textContent='❌ Бұл — '+PL[i][0]+'.';
+            game.i++;
+            if(game.i>=game.q.length){
+                const s=game.s;m.textContent='Ойын аяқталды! Нәтиже: '+s+' / '+game.q.length;
+                if(s>P.map){P.map=s;W('p',P);}
+                game=null;renderAtlas();upd();return;
+            }
+            m.textContent+='  Келесі: «'+PL[game.q[game.i]][0]+'» қайда?';return;
+        }
+        const p=PL[i];
+        $('atlas-info').innerHTML='<h3 class="text-lg font-bold text-emerald-600">'+p[0]+'</h3><p>'+p[3]+'</p><p class="text-xs text-slate-400">Координат: '+p[2]+'° с.е., '+p[1]+'° ш.б. (шамамен)</p>';
+    };
+
+    window.startGame=function(){
+        const q=PL.map((_,i)=>i).sort(()=>Math.random()-.5).slice(0,8);
+        game={q,i:0,s:0};
+        const m=$('game-msg');m.classList.remove('hidden');m.textContent='Картадан тап: «'+PL[q[0]][0]+'» қайда?';renderAtlas();
+    };
+
+    /* ---- 4. Мұғалім панелі & Деректерді басқару ---- */
+    function build(f){
+        f=f||{};let h='';
+        String(f.theory||'').split(/\n\s*\n/).filter(p=>p.trim()).forEach(p=>{h+='<p class="mb-4 leading-relaxed">'+nl(p)+'</p>';});
+        const rows=[['Оқу мақсаты',f.obj],['Сабақ мақсаты',f.goal],['Бағалау критерийі',f.crit],['Бастама',f.start],['Негізгі бөлім',f.main],['Қорытынды',f.end],['Рефлексия',f.refl],['Ресурстар',f.res]].filter(r=>r[1]&&String(r[1]).trim());
+        if(rows.length)h+='<h4 class="font-bold text-emerald-600 dark:text-emerald-400 mt-4 mb-2">Қысқа мерзімді жоспар (ҚМЖ)</h4><div class="rounded-2xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-200 dark:divide-slate-700">'+rows.map(r=>'<div class="p-3"><div class="text-xs font-bold text-slate-400">'+r[0]+'</div><div>'+nl(r[1])+'</div></div>').join('')+'</div>';
+        if(Array.isArray(f.images)&&f.images.length)h+='<div class="grid '+(f.images.length>1?'sm:grid-cols-2 ':'')+'gap-3 my-4">'+f.images.map(u=>'<img src="'+esc(u)+'" alt="Сабақ суреті" class="w-full rounded-2xl border border-slate-200 dark:border-slate-700 object-cover cursor-zoom-in" onclick="window.open(this.src)">').join('')+'</div>';
+        return h||'<p>Мазмұн толтырылмаған.</p>';
+    }
+
+    const slim=()=>LESSONS_DATA.filter(l=>l.custom).map(l=>{const c=Object.assign({},l);delete c.content;return c;});
+    function save(){try{localStorage.setItem(KEY,JSON.stringify({lessons:slim(),quiz:QUIZ.filter(q=>q.custom)}));return true;}catch(e){alert('Сақтау орны толды. Суреттерді азайтыңыз немесе кейбір сабақты өшіріңіз (Экспорт жасап қоюға болады).');return false;}}
+
+    function apply(d){
+        (d.lessons||[]).forEach(l=>{
+            if(!l||!l.title||!l.raw)return;
+            if(!l.id)l.id=Date.now()+Math.floor(Math.random()*1000);
+            l.custom=true;l.grade=parseInt(l.grade,10)||6;l.content=build(l.raw);l.icon=l.icon||'fa-book-open';l.category=l.category||'Мұғалім сабағы';l.summary=l.summary||l.title;
+            const i=LESSONS_DATA.findIndex(x=>x.id===l.id);if(i>=0)LESSONS_DATA[i]=l;else LESSONS_DATA.push(l);
+        });
+        (d.quiz||[]).forEach(q=>{
+            if(!q||!q.q||!TYPES[q.type])return;
+            if(!q.id)q.id='c'+Date.now()+Math.floor(Math.random()*1000);
+            q.custom=true;if(q.type!=='single'){q.options=[];q.correct=99;}
+            const i=QUIZ.findIndex(x=>x.id===q.id);if(i>=0)QUIZ[i]=q;else QUIZ.push(q);
+        });
+    }
+
+    function gradeButtons(){
+        const all=$('grade-btn-all');if(!all)return;const box=all.parentNode;
+        box.querySelectorAll('.x-added').forEach(b=>b.remove());
+        [...new Set(LESSONS_DATA.map(l=>l.grade))].forEach(g=>{
+            if($('grade-btn-'+g))return;
+            const b=document.createElement('button');
+            b.id='grade-btn-'+g;b.setAttribute('onclick','filterGrade('+g+')');b.textContent=g+'-сынып';
+            b.className='x-added grade-filter-btn px-4 py-2 rounded-xl text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
+            box.appendChild(b);
+        });
+        const gv=b=>b.id==='grade-btn-all'?0:parseInt(b.id.slice(10),10);
+        [...box.children].sort((a,b)=>gv(a)-gv(b)).forEach(b=>box.appendChild(b));
+    }
+
+    function refresh(){gradeButtons();renderLessons();gmLists();if(window.gmUpd)gmUpd();}
+    try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)apply(s);}catch(e){}
+
+    /* Навигацияны баптау */
+    const TABS=['lessons','atlas','quiz','manage'];
+    const OFF='px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600';
+    const ON='px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm';
+    const nav=document.querySelector('header nav');
+    if(nav){
+        const b=document.createElement('button');b.id='nav-manage';b.className=OFF;b.setAttribute('onclick',"switchTab('manage')");
+        b.innerHTML='<i class="fa-solid fa-chalkboard-user"></i> Мұғалім панелі';nav.appendChild(b);
+    }
+    const mm=$('mobile-menu');
+    if(mm){
+        const b=document.createElement('button');b.className='w-full text-left px-4 py-2.5 rounded-xl font-medium text-slate-700 dark:text-slate-200 hover:bg-emerald-50';
+        b.setAttribute('onclick',"switchTab('manage');toggleMobileMenu();");b.innerHTML='<i class="fa-solid fa-chalkboard-user mr-2 text-emerald-500"></i> Мұғалім панелі';mm.appendChild(b);
+    }
+
+    window.switchTab=function(tab){
+        if(!TABS.includes(tab))tab='lessons';
+        TABS.forEach(t=>{
+            const s=$('tab-'+t),n=$('nav-'+t);
+            if(s)s.classList.add('hidden');
+            if(n)n.className=OFF;
+        });
+        const activeTab=$('tab-'+tab), activeNav=$('nav-'+tab);
+        if(activeTab)activeTab.classList.remove('hidden');
+        if(activeNav)activeNav.className=ON;
+        if(tab==='atlas')renderAtlas();
+        if(tab==='quiz')loadQuiz();
+        if(tab==='manage')gmLists();
+    };
+
+    /* Мұғалім панелі интерфейсін жасау */
+    const LF=[['obj','Оқу мақсаты','Осы сабақта оқушы нені үйренеді?'],['goal','Сабақ мақсаты',''],['crit','Бағалау критерийі','Оқушы нені орындаса, мақсатқа жетті деп саналады?'],['start','Бастама','Ұйымдастыру, қызығушылықты ояту'],['main','Негізгі бөлім','Тапсырмалар, жұмыс түрлері (жеке, жұптық, топтық)'],['end','Қорытынды',''],['refl','Рефлексия','Кері байланыс'],['res','Ресурстар','Карта, оқулық, презентация т.б.']];
+    const sec=document.createElement('section');sec.id='tab-manage';sec.className='hidden space-y-6 max-w-4xl mx-auto';
+    sec.innerHTML='<div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl space-y-6">'
+    +'<div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-700 pb-4"><div><h2 class="text-2xl font-bold">Мұғалім панелі</h2><p class="text-xs text-slate-500 dark:text-slate-400">Өз сабағыңызды (ҚМЖ-мен) және викторина тапсырмаларын қосыңыз</p></div>'
+    +'<div class="flex gap-2"><button onclick="gmExport()" class="'+BTN2+'"><i class="fa-solid fa-download mr-1"></i>Экспорт</button><label class="'+BTN2+' cursor-pointer"><i class="fa-solid fa-upload mr-1"></i>Импорт<input type="file" accept=".json" class="hidden" onchange="gmImport(this)"></label></div></div>'
+    +'<p class="text-xs text-amber-600 dark:text-amber-400">Материалдар осы браузерде сақталады. Басқа құрылғыға немесе оқушыларға беру үшін «Экспорт» жасап, файлды сол жерде «Импорт» арқылы жүктеңіз.</p>'
+    +'<div class="flex gap-2"><button id="m-b-lesson" onclick="gmSub(\'lesson\')" class="'+BTN+'">Сабақ қосу</button><button id="m-b-quiz" onclick="gmSub(\'quiz\')" class="'+BTN2+'">Тапсырма қосу</button></div>'
+    /* Сабақ формасы */
+    +'<div id="m-lesson" class="space-y-4"><div class="grid sm:grid-cols-3 gap-3">'
+    +L('Сынып','<select id="lf-grade" class="'+IN+'">'+[5,6,7,8,9,10,11].map(g=>'<option value="'+g+'"'+(g==6?' selected':'')+'>'+g+'-сынып</option>').join('')+'</select>')
+    +'<div class="sm:col-span-2">'+L('Сабақ тақырыбы','<input id="lf-title" class="'+IN+'" placeholder="Мысалы: Атмосфера және климат">')+'</div></div>'
+    +'<div class="grid sm:grid-cols-2 gap-3">'+L('Бөлім / санат','<input id="lf-cat" class="'+IN+'" placeholder="Физикалық география">')+L('Қысқаша сипаттама (карточкада көрінеді)','<input id="lf-sum" class="'+IN+'">')+'</div>'
+    +L('Сабақ мазмұны (абзацтарды бос жолмен бөліңіз)',TA('lf-theory',5))
+    +'<div class="space-y-2"><span class="text-xs font-bold text-slate-500 dark:text-slate-400">Суреттер (карта, сызба, фото — бірнеше таңдауға болады)</span><label class="'+BTN2+' inline-block cursor-pointer"><i class="fa-solid fa-image mr-1"></i>Сурет қосу<input id="lf-img" type="file" accept="image/*" multiple class="hidden" onchange="gmImgAdd(this)"></label><div id="lf-img-prev" class="flex flex-wrap gap-3"></div></div>'
+    +'<h3 class="font-bold text-emerald-600 dark:text-emerald-400 pt-2">Қысқа мерзімді жоспар (ҚМЖ)</h3><div class="grid sm:grid-cols-2 gap-3">'+LF.map(f=>L(f[1],TA('lf-'+f[0],2,f[2]))).join('')+'</div>'
+    +'<div class="flex flex-wrap items-center gap-3"><button onclick="gmLSave()" class="'+BTN+'"><i class="fa-solid fa-floppy-disk mr-1"></i>Сабақты сақтау</button><button onclick="gmLReset()" class="'+BTN2+'">Тазалау</button><span id="lf-msg" class="text-sm font-semibold"></span></div>'
+    +'<div><h3 class="font-bold mb-2">Менің сабақтарым</h3><div id="m-lessons-list" class="space-y-2"></div></div></div>'
+    /* Тапсырма формасы */
+    +'<div id="m-quiz" class="hidden space-y-4">'+L('Тапсырма түрі','<select id="qf-type" onchange="gmQType()" class="'+IN+'">'+Object.keys(TYPES).map(k=>'<option value="'+k+'">'+TYPES[k]+'</option>').join('')+'</select>')
+    +L('Сұрақ / тапсырма мәтіні',TA('qf-q',2))
+    +'<div id="qb-opts" class="space-y-3">'+L('Жауап нұсқалары (әр жолға біреуден)',TA('qf-opts',4,'Тропосфера\nСтратосфера\nМезосфера'))+L('Дұрыс жауап нөмірі (бірнеше болса үтірмен: 1,3)','<input id="qf-ans" class="'+IN+'" placeholder="1">')+'</div>'
+    +'<div id="qb-tf" class="hidden">'+L('Тұжырым','<select id="qf-tf" class="'+IN+'"><option value="1">Дұрыс</option><option value="0">Бұрыс</option></select>')+'</div>'
+    +'<div id="qb-text" class="hidden">'+L('Қабылданатын жауаптар (бірнеше болса «|» белгісімен бөліңіз)','<input id="qf-text" class="'+IN+'" placeholder="Ертіс | Иртыш">')+'</div>'
+    +'<div id="qb-match" class="hidden">'+L('Жұптар (әр жолға «сол жағы = оң жағы»)',TA('qf-match',4,'Астана = Есіл\nАтырау = Жайық\nӨскемен = Ертіс'))+'</div>'
+    +L('Түсініктеме (жауаптан кейін көрсетіледі, міндетті емес)',TA('qf-exp',2))
+    +'<div class="flex flex-wrap items-center gap-3"><button onclick="gmQSave()" class="'+BTN+'"><i class="fa-solid fa-plus mr-1"></i>Тапсырманы қосу</button><span id="qf-msg" class="text-sm font-semibold"></span></div>'
+    +'<div><h3 class="font-bold mb-2">Менің тапсырмаларым</h3><div id="m-quiz-list" class="space-y-2"></div></div></div></div>';
+    document.querySelector('main').appendChild(sec);
+
+    let editId=null,imgs=[];
+    function shrink(file){return new Promise((ok,no)=>{
+        const r=new FileReader();
+        r.onerror=()=>no();
+        r.onload=()=>{const im=new Image();im.onerror=()=>no();im.onload=()=>{
+            const M=900,k=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement('canvas');
+            c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+            const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+            ok(c.toDataURL('image/jpeg',0.8));
+        };im.src=r.result;};
+        r.readAsDataURL(file);
+    });}
+    function imgPrev(){
+        $('lf-img-prev').innerHTML=imgs.map((u,i)=>'<div class="relative"><img src="'+esc(u)+'" class="w-24 h-24 object-cover rounded-xl border border-slate-200 dark:border-slate-700"><button type="button" onclick="gmImgDel('+i+')" class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs leading-6 text-center">✕</button></div>').join('');
+    }
+    window.gmImgAdd=async function(inp){
+        for(const f of [...inp.files]){try{imgs.push(await shrink(f));}catch(e){alert('«'+f.name+'» суретін оқу мүмкін болмады');}}
+        inp.value='';imgPrev();
+    };
+    window.gmImgDel=function(i){imgs.splice(i,1);imgPrev();};
+    const val=id=>$(id).value.trim();
+    const say=(id,t,ok)=>{const e=$(id);if(e){e.textContent=t;e.className='text-sm font-semibold '+(ok?'text-emerald-600':'text-red-500');}};
+
+    window.gmSub=function(w){
+        $('m-lesson').classList.toggle('hidden',w!=='lesson');
+        $('m-quiz').classList.toggle('hidden',w!=='quiz');
+        $('m-b-lesson').className=w==='lesson'?BTN:BTN2;
+        $('m-b-quiz').className=w==='quiz'?BTN:BTN2;
+    };
+
+    window.gmLReset=function(){
+        editId=null;imgs=[];imgPrev();
+        ['lf-title','lf-cat','lf-sum','lf-theory'].concat(LF.map(f=>'lf-'+f[0])).forEach(i=>$(i).value='');
+        $('lf-grade').value='6';
+        say('lf-msg','',true);
+    };
+
+    window.gmLSave=function(){
+        const raw={theory:val('lf-theory'),images:imgs.slice()};
+        LF.forEach(f=>raw[f[0]]=val('lf-'+f[0]));
+        if(!val('lf-title'))return say('lf-msg','Сабақ тақырыбын жазыңыз',false);
+        if(!raw.theory&&!raw.images.length&&!LF.some(f=>raw[f[0]]))return say('lf-msg','Мазмұнды немесе ҚМЖ-ны толтырыңыз',false);
+        apply({lessons:[{id:editId||Date.now(),grade:$('lf-grade').value,title:val('lf-title'),category:val('lf-cat'),summary:val('lf-sum'),raw}]});
+        const okSave=save();refresh();
+        const t=val('lf-title');
+        if(okSave){gmLReset();say('lf-msg','«'+t+'» сақталды ✅',true);}else say('lf-msg','Сабақ қосылды, бірақ браузерде сақталмады (орын жетпеді)',false);
+    };
+
+    window.gmLEdit=function(id){
+        const l=LESSONS_DATA.find(x=>x.id===id);if(!l)return;
+        editId=id;
+        $('lf-grade').value=l.grade;$('lf-title').value=l.title;$('lf-cat').value=l.category||'';
+        $('lf-sum').value=l.summary===l.title?'':l.summary;
+        $('lf-theory').value=l.raw?l.raw.theory||'':'';
+        imgs=(l.raw&&l.raw.images||[]).slice();imgPrev();
+        LF.forEach(f=>$('lf-'+f[0]).value=(l.raw&&l.raw[f[0]])||'');
+        say('lf-msg','Өңдеу режимі: өзгерістерді сақтаңыз',true);
+        $('lf-title').scrollIntoView({behavior:'smooth',block:'center'});
+    };
+
+    window.gmLDel=function(id){
+        if(!confirm('Бұл сабақты өшіреміз бе?'))return;
+        const i=LESSONS_DATA.findIndex(x=>x.id===id);
+        if(i>=0)LESSONS_DATA.splice(i,1);
+        save();refresh();
+    };
+
+    window.gmQType=function(){
+        const t=$('qf-type').value;
+        $('qb-opts').classList.toggle('hidden',!(t==='single'||t==='multi'));
+        $('qb-tf').classList.toggle('hidden',t!=='tf');
+        $('qb-text').classList.toggle('hidden',t!=='text');
+        $('qb-match').classList.toggle('hidden',t!=='match');
+    };
+
+    window.gmQSave=function(){
+        const t=$('qf-type').value,o={type:t,q:val('qf-q'),exp:val('qf-exp')};
+        const F=m=>say('qf-msg',m,false);
+        if(!o.q)return F('Сұрақ мәтінін жазыңыз');
+        if(t==='single'||t==='multi'){
+            const opts=$('qf-opts').value.split('\n').map(s=>s.trim()).filter(Boolean);
+            if(opts.length<2)return F('Кемінде 2 жауап нұсқасы керек');
+            const n=val('qf-ans').split(/[,;\s]+/).filter(Boolean).map(x=>parseInt(x,10)-1);
+            if(!n.length||n.some(x=>!(x>=0&&x<opts.length)))return F('Дұрыс жауап нөмірін көрсетіңіз (1–'+opts.length+')');
+            if(t==='single'){
+                if(n.length!==1)return F('Бір ғана нөмір көрсетіңіз');
+                o.options=opts;o.correct=n[0];
+            } else {
+                o.opts=opts;o.answers=[...new Set(n)];
+            }
+        } else if(t==='tf'){
+            o.tf=$('qf-tf').value==='1';
+        } else if(t==='text'){
+            o.accepted=val('qf-text').split('|').map(s=>s.trim()).filter(Boolean);
+            if(!o.accepted.length)return F('Кемінде бір дұрыс жауап жазыңыз');
+        } else {
+            o.pairs=$('qf-match').value.split('\n').map(s=>s.split('=').map(x=>x.trim())).filter(p=>p.length===2&&p[0]&&p[1]);
+            if(o.pairs.length<2)return F('Кемінде 2 жұп керек: «сол жағы = оң жағы»');
+        }
+        apply({quiz:[o]});save();gmLists();
+        ['qf-q','qf-exp','qf-opts','qf-ans','qf-text','qf-match'].forEach(i=>$(i).value='');
+        say('qf-msg','Тапсырма қосылды ✅ (Викторина бөлімінде көрінеді)',true);
+    };
+
+    window.gmQDel=function(id){
+        const i=QUIZ.findIndex(x=>x.id===id);
+        if(i>=0)QUIZ.splice(i,1);
+        if(quizIdx>=QUIZ.length)quizIdx=0;
+        save();gmLists();
+    };
+
+    function gmLists(){
+        const a=$('m-lessons-list'),b=$('m-quiz-list');if(!a||!b)return;
+        const ls=LESSONS_DATA.filter(l=>l.custom),qs=QUIZ.filter(q=>q.custom);
+        const row=(txt,sub,btns)=>'<div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700"><div class="min-w-0"><div class="text-sm font-semibold truncate">'+txt+'</div><div class="text-xs text-slate-500">'+sub+'</div></div><div class="flex gap-2 flex-shrink-0">'+btns+'</div></div>';
+        a.innerHTML=ls.length?ls.map(l=>row(esc(l.title),l.grade+'-сынып',"<button onclick=\"gmLEdit("+l.id+")\" class=\""+BTN2+"\">Өңдеу</button><button onclick=\"gmLDel("+l.id+")\" class=\"px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl text-sm font-semibold\">Өшіру</button>")).join(''):'<p class="text-sm text-slate-400">Әзірге өз сабағыңыз жоқ.</p>';
+        b.innerHTML=qs.length?qs.map(q=>row(esc(q.q),TYPES[q.type],"<button onclick=\"gmQDel('"+q.id+"')\" class=\"px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl text-sm font-semibold\">Өшіру</button>")).join(''):'<p class="text-sm text-slate-400">Әзірге өз тапсырмаңыз жоқ.</p>';
+    }
+
+    window.gmExport=function(){
+        const bl=new Blob([JSON.stringify({lessons:slim(),quiz:QUIZ.filter(q=>q.custom),pins:(window.__pinsGet?__pinsGet():[])},null,1)],{type:'application/json'});
+        const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='geoalam-materials.json';a.click();
+    };
+
+    window.gmImport=function(inp){
+        const f=inp.files[0];if(!f)return;
+        const r=new FileReader();
+        r.onload=()=>{
+            try{
+                const dd=JSON.parse(r.result);apply(dd);if(window.__pinsImport)__pinsImport(dd.pins);save();refresh();
+                alert('Материалдар жүктелді ✅');
+            }catch(e){alert('Файлды оқу мүмкін болмады');}
+            inp.value='';
+        };
+        r.readAsText(f);
+    };
+
+    /* Іске қосу */
+    switchTab('lessons');
+    refresh();
+    renderAtlas();
+    loadQuiz();
+    })();
+    </script>
+
+    <!-- Дүниежүзі картасы -->
+    <div id="world-zoom" class="fixed inset-0 z-[60] hidden bg-slate-900/90 overflow-auto p-4" onclick="worldZoom(false)">
+        <button class="fixed top-4 right-4 w-10 h-10 rounded-full bg-white text-slate-800 text-xl z-10" onclick="worldZoom(false)">✕</button>
+        <img src="" id="world-zoom-img" alt="Дүниежүзінің саяси картасы" class="max-w-none w-[1600px] mx-auto rounded-xl bg-white">
+    </div>
+    <script>
+    (function(){
+        const g=id=>document.getElementById(id);
+        const ON='px-4 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow',OFF='px-4 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-300';
+        window.atlasMode=function(m){
+            const w=m==='world';
+            g('map-mode-kz').className=w?OFF:ON;g('map-mode-world').className=w?ON:OFF;
+            g('kz-map').classList.toggle('hidden',w);g('world-box').classList.toggle('hidden',!w);
+            g('game-msg').classList.add('hidden');
+            g('atlas-info').innerHTML=w?'<h3 class="text-lg font-bold text-emerald-600">Дүниежүзінің саяси картасы</h3><p>Мемлекеттер, шекаралар және жалаулар. Картаны басып үлкейтіп қараңыз.</p>':'<p class="text-slate-500">Картадағы қаланы немесе өңірді таңдаңыз.</p>';
+        };
+        window.worldZoom=function(o){
+            if(o)g('world-zoom-img').src=g('world-img').src;
+            g('world-zoom').classList.toggle('hidden',!o);
+        };
+    })();
+    </script>
+<script>
+(function(){
+const g=id=>document.getElementById(id);
+const KZN={"Afghanistan":"Ауғанстан","Albania":"Албания","Algeria":"Алжир","Angola":"Ангола","Argentina":"Аргентина","Armenia":"Армения","Australia":"Австралия","Austria":"Австрия","Azerbaijan":"Әзірбайжан","Bangladesh":"Бангладеш","Belarus":"Беларусь","Belgium":"Бельгия","Bolivia":"Боливия","Bosnia and Herz.":"Босния және Герцеговина","Botswana":"Ботсвана","Brazil":"Бразилия","Bulgaria":"Болгария","Cambodia":"Камбоджа","Cameroon":"Камерун","Canada":"Канада","Central African Rep.":"Орталық Африка Респ.","Chad":"Чад","Chile":"Чили","China":"Қытай","Colombia":"Колумбия","Dem. Rep. Congo":"Конго (ДР)","Congo":"Конго","Costa Rica":"Коста-Рика","Croatia":"Хорватия","Cuba":"Куба","Czechia":"Чехия","Denmark":"Дания","Dominican Rep.":"Доминикан Респ.","Ecuador":"Эквадор","Egypt":"Египет","El Salvador":"Сальвадор","Eritrea":"Эритрея","Estonia":"Эстония","Ethiopia":"Эфиопия","Finland":"Финляндия","France":"Франция","Gabon":"Габон","Georgia":"Грузия","Germany":"Германия","Ghana":"Гана","Greece":"Грекия","Greenland":"Гренландия","Guatemala":"Гватемала","Guinea":"Гвинея","Guyana":"Гайана","Haiti":"Гаити","Honduras":"Гондурас","Hungary":"Венгрия","Iceland":"Исландия","India":"Үндістан","Indonesia":"Индонезия","Iran":"Иран","Iraq":"Ирак","Ireland":"Ирландия","Israel":"Израиль","Italy":"Италия","Côte d'Ivoire":"Кот-д'Ивуар","Jamaica":"Ямайка","Japan":"Жапония","Jordan":"Иордания","Kazakhstan":"Қазақстан","Kenya":"Кения","Kyrgyzstan":"Қырғызстан","Laos":"Лаос","Latvia":"Латвия","Lebanon":"Ливан","Libya":"Ливия","Lithuania":"Литва","Madagascar":"Мадагаскар","Malaysia":"Малайзия","Mali":"Мали","Mauritania":"Мавритания","Mexico":"Мексика","Moldova":"Молдова","Mongolia":"Моңғолия","Morocco":"Марокко","Mozambique":"Мозамбик","Myanmar":"Мьянма","Namibia":"Намибия","Nepal":"Непал","Netherlands":"Нидерланд","New Zealand":"Жаңа Зеландия","Nicaragua":"Никарагуа","Niger":"Нигер","Nigeria":"Нигерия","North Korea":"Солтүстік Корея","Norway":"Норвегия","Oman":"Оман","Pakistan":"Пәкістан","Panama":"Панама","Papua New Guinea":"Папуа — Жаңа Гвинея","Paraguay":"Парагвай","Peru":"Перу","Philippines":"Филиппин","Poland":"Польша","Portugal":"Португалия","Qatar":"Катар","Romania":"Румыния","Russia":"Ресей","Rwanda":"Руанда","Saudi Arabia":"Сауд Арабиясы","Senegal":"Сенегал","Serbia":"Сербия","Slovakia":"Словакия","Slovenia":"Словения","Somalia":"Сомали","South Africa":"Оңтүстік Африка","South Korea":"Оңтүстік Корея","S. Sudan":"Оңтүстік Судан","Spain":"Испания","Sri Lanka":"Шри-Ланка","Sudan":"Судан","Sweden":"Швеция","Switzerland":"Швейцария","Syria":"Сирия","Taiwan":"Тайвань","Tajikistan":"Тәжікстан","Tanzania":"Танзания","Thailand":"Таиланд","Tunisia":"Тунис","Turkey":"Түркия","Turkmenistan":"Түрікменстан","Uganda":"Уганда","Ukraine":"Украина","United Arab Emirates":"БАӘ","United Kingdom":"Ұлыбритания","United States of America":"АҚШ","Uruguay":"Уругвай","Uzbekistan":"Өзбекстан","Venezuela":"Венесуэла","Vietnam":"Вьетнам","Yemen":"Йемен","Zambia":"Замбия","Zimbabwe":"Зимбабве","Antarctica":"Антарктида","Bhutan":"Бутан","Kuwait":"Кувейт","Luxembourg":"Люксембург","North Macedonia":"Солтүстік Македония","Montenegro":"Черногория","Kosovo":"Косово","Cyprus":"Кипр","Benin":"Бенин","Togo":"Того","Burkina Faso":"Буркина-Фасо","Sierra Leone":"Сьерра-Леоне","Liberia":"Либерия","Guinea-Bissau":"Гвинея-Бисау","Gambia":"Гамбия","Malawi":"Малави","Burundi":"Бурунди","Djibouti":"Джибути","Lesotho":"Лесото","eSwatini":"Эсватини","Eq. Guinea":"Экв. Гвинея","W. Sahara":"Батыс Сахара","Belize":"Белиз","Brunei":"Бруней","Fiji":"Фиджи","Timor-Leste":"Шығыс Тимор","Solomon Is.":"Соломон аралдары","New Caledonia":"Жаңа Каледония","Puerto Rico":"Пуэрто-Рико","Trinidad and Tobago":"Тринидад және Тобаго","Suriname":"Суринам","Falkland Is.":"Фолкленд аралдары","Palestine":"Палестина","Somaliland":"Сомалиленд","Bahamas":"Багам аралдары","Vanuatu":"Вануату","Fr. S. Antarctic Lands":"Француз Оңт. аумақтары","N. Cyprus":"Солтүстік Кипр"};
+const PAL=['#cfe8b8','#f6dca0','#f4c3c8','#bcd9ee','#e3cbe8','#f8e7a8'];
+const W=1000,H=520;
+let loaded=false,loading=false,mode='kz',wg=null,T={k:1,x:0,y:0},feats=[];
+const nm=f=>KZN[f.properties.name]||f.properties.name;
+function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});}
+function fail(){g('world-live').classList.add('hidden');g('world-fallback').classList.remove('hidden');}
+async function initWorld(){
+  if(loaded||loading)return;loading=true;
+  g('world-status').textContent='Карта жүктелуде…';
+  try{
+    if(!window.d3)await loadScript('https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js');
+    if(!window.topojson)await loadScript('https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js');
+    const r=await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json');
+    if(!r.ok)throw 0;
+    draw(await r.json());loaded=true;g('world-status').textContent='';
+  }catch(e){fail();}
+  loading=false;
+}
+function draw(topo){
+  const obj=topo.objects.countries;
+  feats=topojson.feature(topo,obj).features;
+  const proj=d3.geoNaturalEarth1().fitSize([W,H],{type:'Sphere'}),path=d3.geoPath(proj);
+  window.__world={proj:proj,T:()=>T};
+  const nb=topojson.neighbors(obj.geometries),col=[];
+  feats.forEach((f,i)=>{const used=new Set(nb[i].map(j=>col[j]));let c=0;while(used.has(c))c++;col[i]=c%PAL.length;});
+  let h='<path d="'+path({type:'Sphere'})+'" fill="#cfe9f7" stroke="#6fbad8" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+  feats.forEach((f,i)=>{
+    const kz=f.properties.name==='Kazakhstan';
+    f.area=path.area(f);f.c=path.centroid(f);
+    h+='<path class="wc" data-i="'+i+'" d="'+(path(f)||'')+'" fill="'+(kz?'#34d399':PAL[col[i]])+'" stroke="'+(kz?'#047857':'#7b8794')+'" stroke-width="'+(kz?1.6:.6)+'" vector-effect="non-scaling-stroke"/>';
+  });
+  h+='<g id="wlab" pointer-events="none" font-weight="700" text-anchor="middle" fill="#1f2937" stroke="#fff" stroke-width="3" paint-order="stroke" stroke-linejoin="round">';
+  feats.forEach((f,i)=>{if(KZN[f.properties.name]&&f.area>40&&!isNaN(f.c[0]))h+='<text data-i="'+i+'" x="'+f.c[0].toFixed(1)+'" y="'+f.c[1].toFixed(1)+'" font-size="9">'+KZN[f.properties.name]+'</text>';});
+  h+='</g>';
+  g('world-svg').innerHTML='<g id="wg">'+h+'</g>';
+  wg=g('wg');
+  const hide=['Fr. S. Antarctic Lands'];
+  fit();
+  bind();
+  if(window.pinsRenderWorld)pinsRenderWorld();
+}
+function clamp(){T.k=Math.max(1,Math.min(14,T.k));T.x=Math.min(0,Math.max(W-W*T.k,T.x));T.y=Math.min(0,Math.max(H-H*T.k,T.y));}
+function fit(){
+  clamp();wg.setAttribute('transform','translate('+T.x+' '+T.y+') scale('+T.k+')');
+  if(window.__pinsWorldUpd)__pinsWorldUpd();
+  g('wlab').querySelectorAll('text').forEach(t=>{
+    const f=feats[+t.dataset.i];
+    t.style.display=f.area*T.k*T.k>2600?'':'none';
+    t.setAttribute('font-size',(f.area*T.k*T.k>9000?11:9)/T.k);
+    t.setAttribute('stroke-width',3/T.k);
+  });
+}
+function zoomAt(f,cx,cy){const k0=T.k;T.k=Math.max(1,Math.min(14,k0*f));const r=T.k/k0;T.x=cx-(cx-T.x)*r;T.y=cy-(cy-T.y)*r;fit();}
+function svgPt(e){const s=g('world-svg'),b=s.getBoundingClientRect();return[(e.clientX-b.left)*W/b.width,(e.clientY-b.top)*H/b.height];}
+let game=null;
+function info(f){
+  g('atlas-info').innerHTML='<h3 class="text-lg font-bold text-emerald-600">'+nm(f)+'</h3><p class="text-slate-500 text-xs">'+f.properties.name+'</p>'+(f.properties.name==='Kazakhstan'?'<p class="mt-2">Астана — елорда. Ауданы бойынша әлемдегі 9-ірі мемлекет.</p>':'');
+}
+function bind(){
+  const svg=g('world-svg'),tip=g('world-tip');
+  svg.addEventListener('wheel',e=>{e.preventDefault();const p=svgPt(e);zoomAt(e.deltaY<0?1.25:0.8,p[0],p[1]);},{passive:false});
+  let drag=null,moved=false;
+  svg.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,tx:T.x,ty:T.y};moved=false;});
+  window.addEventListener('pointerup',()=>{drag=null;});
+  svg.addEventListener('pointermove',e=>{
+    if(drag){const b=svg.getBoundingClientRect(),dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>4)moved=true;if(moved){T.x=drag.tx+dx*W/b.width;T.y=drag.ty+dy*H/b.height;fit();}}
+    const t=e.target;
+    if(t.classList&&t.classList.contains('wc')&&!game){const f=feats[+t.dataset.i],b=g('world-box').getBoundingClientRect();tip.textContent=nm(f);tip.style.left=(e.clientX-b.left+12)+'px';tip.style.top=(e.clientY-b.top+12)+'px';tip.classList.remove('hidden');}
+    else tip.classList.add('hidden');
+  });
+  svg.addEventListener('pointerleave',()=>tip.classList.add('hidden'));
+  svg.addEventListener('click',e=>{
+    if(moved)return;const t=e.target;if(!(t.classList&&t.classList.contains('wc')))return;
+    const f=feats[+t.dataset.i];
+    if(game)answer(f);else info(f);
+  });
+}
+window.worldZ=function(d){if(!loaded)return;if(d===0){T={k:1,x:0,y:0};fit();}else zoomAt(d>0?1.5:1/1.5,W/2,H/2);};
+function answer(f){
+  const m=g('game-msg'),t=feats[game.q[game.i]];
+  if(f===t){game.s++;m.textContent='✅ Дұрыс!';}else m.textContent='❌ Бұл — '+nm(f)+'.';
+  game.i++;
+  if(game.i>=game.q.length){m.textContent+=' Ойын аяқталды! Нәтиже: '+game.s+' / '+game.q.length;game=null;g('world-svg').setAttribute('data-game','0');return;}
+  m.textContent+=' Келесі: «'+nm(feats[game.q[game.i]])+'» қайда?';
+}
+const oldStart=window.startGame;
+window.startGame=function(){
+  if(mode!=='world')return oldStart&&oldStart();
+  if(!loaded)return;
+  const ids=feats.map((f,i)=>i).filter(i=>KZN[feats[i].properties.name]&&feats[i].area>40&&feats[i].properties.name!=='Antarctica');
+  const q=ids.sort(()=>Math.random()-.5).slice(0,8);
+  game={q,i:0,s:0};g('world-svg').setAttribute('data-game','1');const m=g('game-msg');m.classList.remove('hidden');m.textContent='Картадан тап: «'+nm(feats[q[0]])+'» қайда?';
+};
+const oldMode=window.atlasMode;
+window.atlasMode=function(m){
+  mode=m;game=null;if(g('world-svg'))g('world-svg').setAttribute('data-game','0');
+  oldMode(m);
+  if(m==='world')initWorld();
+};
+})();
+</script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nl=t=>esc(t).replace(/\n/g,'<br>');
+const KEY='geo_pins';
+const IN='w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500';
+const B1='pin-btn px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition';
+const B2='pin-btn px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-sm font-semibold transition';
+const B3='pin-btn px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl text-sm font-semibold';
+const TYPES={gen:['📍','#dc2626','Жалпы нысан'],city:['🏙️','#059669','Қала / елді мекен'],mount:['⛰️','#a16207','Тау / шың'],water:['💧','#0284c7','Су нысаны'],ind:['🏭','#475569','Кен орны / кәсіпорын'],nat:['🌳','#16a34a','Қорық / табиғат'],hist:['⭐','#d97706','Тарихи орын']};
+let pins=[];try{pins=JSON.parse(localStorage.getItem(KEY)||'[]')||[];}catch(e){}
+let mode='kz',placing=false,draft=null,editId=null,img=null;
+const st=document.createElement('style');
+st.textContent='#world-svg{--halo:#fff}.dark #world-svg{--halo:#0f172a}#wpins[data-lab="0"] .lbl{display:none}[data-game="1"] .pin{display:none}.placing{cursor:crosshair!important}#atlas-info button:not(.pin-btn){display:none}';
+document.head.appendChild(st);
+function save(){try{localStorage.setItem(KEY,JSON.stringify(pins));return true;}catch(e){alert('Сақтау орны толды. Суретті кішірек етіп көріңіз немесе кейбір белгіні өшіріңіз.');return false;}}
+/* KZ координаталары */
+const fx=lo=>28.5+(lo-46)*28.35;
+const LA=[[54,120.5],[50,271],[46,416.5],[42,555]];
+const fy=la=>{const i=la>=50?0:la>=46?1:2,a=LA[i],b=LA[i+1];return a[1]+(a[0]-la)/(a[0]-b[0])*(b[1]-a[1]);};
+const ix=x=>46+(x-28.5)/28.35;
+const iy=y=>{const i=y<271?0:y<416.5?1:2,a=LA[i],b=LA[i+1];return a[0]-(y-a[1])/(b[1]-a[1])*(a[0]-b[0]);};
+function pinSVG(p,x,y,extra,dr){
+  const t=TYPES[p.type]||TYPES.gen;
+  return '<g class="pin" data-id="'+p.id+'" data-x="'+x+'" data-y="'+y+'" style="cursor:pointer" transform="translate('+x.toFixed(1)+' '+y.toFixed(1)+')'+(extra||'')+'"><circle r="12" fill="'+t[1]+'" stroke="#fff" stroke-width="3"'+(dr?' stroke-dasharray="4 3" opacity=".85"':'')+'/><text text-anchor="middle" y="5" font-size="13" pointer-events="none">'+t[0]+'</text><text class="lbl" x="17" y="5" fill="currentColor" pointer-events="none">'+esc(p.title||'')+'</text></g>';
+}
+const list=m=>pins.filter(p=>p.map===m).concat(draft&&draft.map===m?[draft]:[]);
+function renderKZ(){
+  const svg=$('kz-map');if(!svg||!svg.firstChild)return;
+  const old=svg.querySelector('#kzpins');if(old)old.remove();
+  svg.insertAdjacentHTML('beforeend','<g id="kzpins">'+list('kz').map(p=>pinSVG(p,fx(p.lon),fy(p.lat),'',p===draft)).join('')+'</g>');
+}
+window.pinsRenderWorld=function(){
+  const W=window.__world,wg=$('wg');if(!W||!wg)return;
+  const o=$('wpins');if(o)o.remove();
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');g.id='wpins';wg.appendChild(g);
+  const k=W.T().k;g.setAttribute('data-lab',k>=1.6?'1':'0');
+  g.innerHTML=list('world').map(p=>{const q=W.proj([p.lon,p.lat]);return q?pinSVG(p,q[0],q[1],' scale('+(1/k)+')',p===draft):'';}).join('');
+};
+window.__pinsWorldUpd=function(){
+  const W=window.__world,g=$('wpins');if(!W||!g)return;
+  const k=W.T().k;g.setAttribute('data-lab',k>=1.6?'1':'0');
+  g.querySelectorAll('.pin').forEach(n=>n.setAttribute('transform','translate('+(+n.dataset.x).toFixed(1)+' '+(+n.dataset.y).toFixed(1)+') scale('+(1/k)+')'));
+};
+function redraw(){if(window.renderAtlas)window.renderAtlas();window.pinsRenderWorld();}
+const origRender=window.renderAtlas;
+window.renderAtlas=function(){origRender&&origRender.apply(this,arguments);renderKZ();};
+const hint=()=>{$('atlas-info').innerHTML='<p class="text-slate-500">'+(mode==='world'?'Елді немесе нүктені таңдаңыз.':'Картадағы қаланы немесе өңірді таңдаңыз.')+'</p>';};
+/* Түймелер */
+const gb=$('game-btn'),pb=document.createElement('button');
+pb.id='pin-toggle';pb.onclick=()=>window.pinToggle();
+gb.parentNode.insertBefore(pb,gb);
+function pbUI(){
+  pb.className='px-5 py-2.5 font-bold rounded-xl text-sm transition '+(placing?'bg-amber-500 text-slate-950':'bg-sky-600 hover:bg-sky-500 text-white');
+  pb.innerHTML=placing?'<i class="fa-solid fa-xmark mr-2"></i>Болдырмау':'<i class="fa-solid fa-location-dot mr-2"></i>Белгі қою';
+  ['kz-map','world-svg'].forEach(i=>$(i)&&$(i).classList.toggle('placing',placing));
+}
+function stopPlace(){placing=false;draft=null;editId=null;img=null;pbUI();redraw();}
+window.pinToggle=function(){
+  if(placing){stopPlace();hint();return;}
+  if(mode==='world'&&!window.__world){alert('Дүниежүзі картасы әлі жүктелген жоқ');return;}
+  placing=true;pbUI();
+  $('game-msg').classList.add('hidden');
+  $('atlas-info').innerHTML='<h3 class="text-lg font-bold text-sky-600">Белгі қою</h3><p>Картаның қалаған жерін басыңыз — сол жерге белгі қойып, мәлімет жазасыз.</p>';
+};
+pbUI();
+/* Сурет */
+function shrink(file){return new Promise((ok,no)=>{const r=new FileReader();r.onerror=no;r.onload=()=>{const im=new Image();im.onerror=no;im.onload=()=>{const M=700,k=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.78));};im.src=r.result;};r.readAsDataURL(file);});}
+/* Форма */
+const fmt=p=>Math.abs(p.lat).toFixed(2)+'°'+(p.lat>=0?'N':'S')+', '+Math.abs(p.lon).toFixed(2)+'°'+(p.lon>=0?'E':'W');
+function form(p){
+  $('atlas-info').innerHTML='<h3 class="text-lg font-bold text-sky-600">'+(editId?'Белгіні өңдеу':'Жаңа белгі')+'</h3><p class="text-xs text-slate-500">Координата: '+fmt(p)+'</p>'
+  +'<label class="block space-y-1"><span class="text-xs font-bold text-slate-500">Атауы</span><input id="pn-title" class="'+IN+'" value="'+esc(p.title||'')+'" placeholder="Мысалы: Байқоңыр ғарыш айлағы"></label>'
+  +'<label class="block space-y-1"><span class="text-xs font-bold text-slate-500">Түрі</span><select id="pn-type" class="'+IN+'" onchange="pinType()">'+Object.keys(TYPES).map(k=>'<option value="'+k+'"'+(p.type===k?' selected':'')+'>'+TYPES[k][0]+' '+TYPES[k][2]+'</option>').join('')+'</select></label>'
+  +'<label class="block space-y-1"><span class="text-xs font-bold text-slate-500">Мәлімет</span><textarea id="pn-desc" rows="5" class="'+IN+'" placeholder="Бұл нысан туралы жазыңыз...">'+esc(p.desc||'')+'</textarea></label>'
+  +'<div class="space-y-2"><label class="'+B2+' inline-block cursor-pointer"><i class="fa-solid fa-image mr-1"></i>Сурет<input type="file" accept="image/*" class="hidden" onchange="pinImg(this)"></label><div id="pn-prev"></div></div>'
+  +'<div class="flex flex-wrap gap-2 pt-1"><button onclick="pinSave()" class="'+B1+'"><i class="fa-solid fa-floppy-disk mr-1"></i>Сақтау</button><button onclick="pinCancel()" class="'+B2+'">Бас тарту</button></div>';
+  prev();
+}
+function prev(){const e=$('pn-prev');if(e)e.innerHTML=img?'<div class="relative inline-block"><img src="'+esc(img)+'" class="w-full max-h-40 rounded-xl object-cover"><button onclick="pinImgDel()" class="pin-btn absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs">✕</button></div>':'';}
+window.pinImg=async function(inp){const f=inp.files[0];if(!f)return;try{img=await shrink(f);}catch(e){alert('Суретті оқу мүмкін болмады');}inp.value='';prev();};
+window.pinImgDel=function(){img=null;prev();};
+window.pinType=function(){if(draft){draft.type=$('pn-type').value;redraw();}};
+window.pinCancel=function(){stopPlace();hint();};
+window.pinSave=function(){
+  const title=$('pn-title').value.trim();if(!title){$('pn-title').focus();return alert('Атауын жазыңыз');}
+  const d={title,type:$('pn-type').value,desc:$('pn-desc').value.trim(),img:img};
+  let id;
+  if(editId){const p=pins.find(x=>x.id===editId);Object.assign(p,d);id=editId;}
+  else{id='p'+Date.now();pins.push(Object.assign({id,map:draft.map,lon:draft.lon,lat:draft.lat},d));}
+  if(!save()){if(!editId)pins.pop();return;}
+  placing=false;draft=null;editId=null;img=null;pbUI();redraw();show(id);
+};
+function show(id){
+  const p=pins.find(x=>x.id===id);if(!p)return;const t=TYPES[p.type]||TYPES.gen;
+  $('atlas-info').innerHTML='<div class="text-xs font-bold" style="color:'+t[1]+'">'+t[0]+' '+t[2]+'</div><h3 class="text-lg font-bold text-emerald-600">'+esc(p.title)+'</h3><p class="text-xs text-slate-500">'+fmt(p)+'</p>'
+  +(p.img?'<img src="'+esc(p.img)+'" class="w-full rounded-xl cursor-zoom-in" onclick="window.open(this.src)">':'')
+  +(p.desc?'<p class="leading-relaxed">'+nl(p.desc)+'</p>':'<p class="text-slate-400">Мәлімет жазылмаған.</p>')
+  +'<div class="flex gap-2 pt-1"><button onclick="pinEdit(\''+id+'\')" class="'+B2+'">Өңдеу</button><button onclick="pinDel(\''+id+'\')" class="'+B3+'">Өшіру</button></div>';
+}
+window.pinEdit=function(id){
+  const p=pins.find(x=>x.id===id);if(!p)return;
+  editId=id;img=p.img||null;draft=null;placing=false;pbUI();form(p);
+};
+window.pinDel=function(id){
+  if(!confirm('Бұл белгіні өшіреміз бе?'))return;
+  pins=pins.filter(x=>x.id!==id);save();redraw();hint();
+};
+/* Картаны басу */
+let down=null;
+document.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];},true);
+document.addEventListener('click',e=>{
+  const pin=e.target.closest&&e.target.closest('.pin');
+  if(pin&&!pin.closest('#kz-map')&&!pin.closest('#world-svg'))return;
+  if(pin){
+    if(window.__noPin)return;
+    e.stopPropagation();show(pin.dataset.id);return;
+  }
+  if(!placing)return;
+  const kz=e.target.closest&&e.target.closest('#kz-map'),wd=e.target.closest&&e.target.closest('#world-svg');
+  if(!kz&&!wd)return;
+  e.stopPropagation();e.preventDefault();
+  if(down&&Math.abs(e.clientX-down[0])+Math.abs(e.clientY-down[1])>6)return;
+  let m,lon,lat;
+  if(kz){
+    const svg=$('kz-map'),pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+    const q=pt.matrixTransform(svg.getScreenCTM().inverse());m='kz';lon=ix(q.x);lat=iy(q.y);
+  } else {
+    const W=window.__world;if(!W)return;
+    const svg=$('world-svg'),b=svg.getBoundingClientRect(),T=W.T();
+    const x=((e.clientX-b.left)*1000/b.width-T.x)/T.k,y=((e.clientY-b.top)*520/b.height-T.y)/T.k;
+    const r=W.proj.invert([x,y]);if(!r||isNaN(r[0])||isNaN(r[1]))return;m='world';lon=r[0];lat=r[1];
+  }
+  draft={id:'draft',map:m,lon:+lon.toFixed(4),lat:+lat.toFixed(4),title:'',type:'gen'};
+  editId=null;img=null;redraw();form(draft);
+},true);
+/* Режим және ойын */
+const oMode=window.atlasMode;
+window.atlasMode=function(m){mode=m;if(placing||draft)stopPlace();oMode(m);if(window.renderAtlas&&m==='kz')window.renderAtlas();window.pinsRenderWorld();};
+const oStart=window.startGame;
+window.startGame=function(){if(placing||draft)stopPlace();oStart&&oStart();};
+/* Экспорт / импорт */
+window.__pinsGet=()=>pins;
+window.__pinsImport=function(arr){
+  if(!Array.isArray(arr))return;
+  arr.forEach(p=>{if(!p||!p.title||isNaN(p.lon)||isNaN(p.lat)||(p.map!=='kz'&&p.map!=='world'))return;if(!p.id)p.id='p'+Date.now()+Math.floor(Math.random()*1000);const i=pins.findIndex(x=>x.id===p.id);if(i>=0)pins[i]=p;else pins.push(p);});
+  save();redraw();
+};
+if(window.renderAtlas)window.renderAtlas();
+})();
+</script>
+</body>
+</html>
+</body></html>
